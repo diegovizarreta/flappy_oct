@@ -1,9 +1,21 @@
+
+
+
+
+
 //canvas
 var canvas = document.getElementById('c')
 var ctx = canvas.getContext('2d')
 //variables
+
+var soundStar = document.createElement("audio")
+soundStar.src="http://66.90.93.122/ost/mario-kart-64/fyocpkkg/02%20Setup%20and%20Kart%20Select.mp3"
+var soundInicio =document.createElement("audio")
+soundInicio.src="http://66.90.93.122/ost/mario-kart-64/pgpwymbj/25%20Starting%20Race%203.mp3"
+var soundDie = document.createElement('audio')
+soundDie.src="http://66.90.93.122/ost/mario-bros/leyqroln/09%20mb%20game%20over.mp3"
 var interval
-var frames
+var frames = 0
 var images = {
     bg: "https://github.com/ironhack-labs/lab-canvas-flappybirds/blob/master/starter_code/images/bg.png?raw=true",
     flappy: "https://github.com/ironhack-labs/lab-canvas-flappybirds/blob/master/starter_code/images/flappy.png?raw=true",
@@ -11,6 +23,7 @@ var images = {
     obstacle_bottom: "https://github.com/ironhack-labs/lab-canvas-flappybirds/blob/master/starter_code/images/obstacle_bottom.png?raw=true",
     obstacle_top: "https://github.com/ironhack-labs/lab-canvas-flappybirds/blob/master/starter_code/images/obstacle_top.png?raw=true"
 }
+var pipes = []
 //clases
 function Board(){
     this.x = 0
@@ -25,6 +38,11 @@ function Board(){
         if(this.x < -this.width) this.x = 0
         ctx.drawImage(this.image,this.x,this.y,this.width,this.height)
         ctx.drawImage(this.image,this.x + this.width,this.y,this.width,this.height)
+    }
+
+    this.drawScore = function(){
+        ctx.font = "bold 24px Avenir"
+        ctx.fillText("Score: " + Math.floor(frames/60), 50,50)
     }
 }
 
@@ -47,24 +65,77 @@ function Flappy(){
         else if(this.y < 10 ) {
             this.y = 10
         }
-        else this.y*=1.01
+        else this.y+=2.01
 
+    }
+
+    this.isTouching = function(item){
+        return (this.x < item.x + item.width) &&
+        (this.x + this.width > item.x) &&
+        (this.y < item.y + item.height) &&
+        (this.y + this.height > item.y);
+    }
+
+} //flappy
+//pipe
+function Pipe(height,y, position){
+    this.x = canvas.width + 60
+    this.y = y || 0
+    this.width = 60
+    this.height = height
+    this.image = new Image()
+    this.image.src = position === "top" ? images.obstacle_top : images.obstacle_bottom
+    this.draw = function(){
+        this.x-=2
+        ctx.drawImage(this.image,this.x,this.y,this.width,this.height) 
     }
 }
 
 //instances
 var bg = new Board()
 var flappy = new Flappy()
+var pipe = new Pipe()
+var s=0
+
+
 //main functions
 function start(){
+    soundInicio.play()
+    pipes = []
+    frames = 0
+    flappy = new Flappy()
     if(!interval) interval = setInterval(update,1000/60)
+
+    
+
 }
 function update(){
+    frames++
+    s++
+    if(s===9) {
+
+        soundStar.play()
+    }
+
     ctx.clearRect(0,0,canvas.width, canvas.height)
     bg.draw()
     flappy.draw()
+    drawPipes()
+    bg.drawScore()
+    checkFlappyCollition()
 }
-function gameOver(){}
+function gameOver(){
+    clearInterval(interval)
+    interval = null
+    ctx.fillStyle = "red"
+    ctx.font = "bold 80px Arial"
+    ctx.fillText("GAME OVER", 50,200)
+    ctx.fillStyle = "black"
+    ctx.font = "bold 40px Arial"
+    ctx.fillText("Tu score: " + Math.floor(frames/60), 200,300)
+    ctx.font = "bold 20px Arial"
+    ctx.fillText("Presiona 'Return' para reiniciar", 50,350)
+}
 
 //aux functions
 function drawCover(){
@@ -78,11 +149,37 @@ function drawCover(){
     }
 }
 
+function generatePipes(){
+    if(frames%150===0) {
+        var height = Math.floor(Math.random()*200 + 50)
+        pipes.push(new Pipe(height,0, "top"))
+        var h = canvas.height-height-100
+        var y = canvas.height - h
+        pipes.push(new Pipe(h,y))
+    }
+    
+}
+
+function drawPipes(){
+    generatePipes()
+    pipes.forEach(function(pipe){
+        pipe.draw()
+    })
+}
+
+function checkFlappyCollition(){
+    for(var pipe of pipes){
+        if(flappy.isTouching(pipe)){
+            gameOver() , soundDie.play()
+        }
+    }
+}
+
 //listeners
 addEventListener('keyup',function(e){
     switch(e.keyCode){
         case 13:
-            return start()
+            return start() 
         default:
             return
     }
@@ -99,4 +196,3 @@ addEventListener('keydown',function(e){
 } )
 
 drawCover()
-
