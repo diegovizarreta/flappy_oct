@@ -46,7 +46,8 @@ function drawCover(){
     img.onload = function(){
         bg.draw()
         ctx.drawImage(img, 50,100,300,100)
-
+        ctx.font = "bold 24px Avenir"
+        ctx.fillText("Presiona la tecla 'Return' para comenzar", 50,300)
     }
 }
 
