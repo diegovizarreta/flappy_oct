@@ -27,15 +27,42 @@ function Board(){
         ctx.drawImage(this.image,this.x + this.width,this.y,this.width,this.height)
     }
 }
+
+function Flappy(){
+    Board.call(this)
+    this.x = 100
+    this.y = 200
+    this.width = 40
+    this.height = 30
+    this.image.src = images.flappy
+    //this.image.onload = ()=>this.draw()
+    this.draw = function(){
+        this.boundaries()
+        ctx.drawImage(this.image,this.x,this.y,this.width,this.height)
+    }
+    this.boundaries = function(){
+        if(this.y+this.height > canvas.height-10) {
+            this.y = canvas.height-this.height
+        }
+        else if(this.y < 10 ) {
+            this.y = 10
+        }
+        else this.y*=1.01
+
+    }
+}
+
 //instances
 var bg = new Board()
+var flappy = new Flappy()
 //main functions
 function start(){
-    interval = setInterval(update,1000/60)
+    if(!interval) interval = setInterval(update,1000/60)
 }
 function update(){
     ctx.clearRect(0,0,canvas.width, canvas.height)
     bg.draw()
+    flappy.draw()
 }
 function gameOver(){}
 
@@ -56,6 +83,16 @@ addEventListener('keyup',function(e){
     switch(e.keyCode){
         case 13:
             return start()
+        default:
+            return
+    }
+} )
+
+addEventListener('keydown',function(e){
+    switch(e.keyCode){
+        case 32:
+            flappy.y -=40
+            return
         default:
             return
     }
